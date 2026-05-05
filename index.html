@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哈林運動 AI Agent 平台 — 網頁架構設計圖</title>
+<style>
+  /* ===== 設計變數 ===== */
+  :root {
+    --navy: #0F1B2D;
+    --graphite: #2C3E50;
+    --coral: #FF6B5B;
+    --gold: #F4B942;
+    --ice: #EAF1F8;
+    --cloud: #F7F9FC;
+    --line: #D6DCE5;
+    --body: #3A4A5E;
+    --muted: #7E8B9C;
+    --green: #2EB67D;
+    --white: #FFFFFF;
+
+    --font-title: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+    --font-body: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    color: var(--body);
+    background: var(--cloud);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== 頂部 Hero ===== */
+  .hero {
+    background: var(--navy);
+    color: var(--white);
+    padding: 60px 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 48px; left: 48px;
+    width: 96px; height: 8px;
+    background: var(--coral);
+  }
+  .hero .eyebrow {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    margin-top: 24px;
+  }
+  .hero h1 {
+    font-size: 44px;
+    font-weight: 700;
+    margin-top: 16px;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .hero h1 .accent { color: var(--coral); }
+  .hero .subtitle {
+    font-size: 16px;
+    color: var(--ice);
+    margin-top: 16px;
+    max-width: 800px;
+  }
+  .hero .meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+  .hero .meta-item {
+    border-left: 3px solid var(--gold);
+    padding-left: 16px;
+  }
+  .hero .meta-item .k {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .hero .meta-item .v {
+    font-size: 14px;
+    color: var(--white);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ===== 區塊容器 ===== */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+  .section {
+    padding: 72px 0;
+  }
+  .section-header {
+    margin-bottom: 48px;
+  }
+  .section-header .eyebrow {
+    display: inline-block;
+    color: var(--coral);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    border-left: 3px solid var(--coral);
+    padding-left: 12px;
+  }
+  .section-header h2 {
+    font-size: 32px;
+    color: var(--graphite);
+    font-weight: 700;
+    margin-top: 12px;
+    letter-spacing: -0.3px;
+  }
+  .section-header p {
+    color: var(--muted);
+    margin-top: 12px;
+    font-size: 15px;
+    max-width: 720px;
+  }
+
+  /* ===== Step Flow（主流程圖） ===== */
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    position: relative;
+  }
+  .step {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 28px 32px;
+    position: relative;
+    transition: all 0.2s ease;
+    display: grid;
+    grid-template-columns: 80px 1fr 240px;
+    gap: 24px;
+    align-items: center;
+  }
+  .step:hover {
+    border-color: var(--coral);
+    box-shadow: 0 10px 30px rgba(15, 27, 45, 0.08);
+    transform: translateY(-2px);
+  }
+  .step-num {
+    width: 64px; height: 64px;
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--font-title);
+  }
+  .step.locked .step-num { background: var(--coral); }
+  .step.gen .step-num    { background: var(--graphite); }
+  .step.publish .step-num{ background: var(--gold); color: var(--navy); }
+
+  .step-body h3 {
+    font-size: 20px;
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .step-body .desc {
+    color: var(--body);
+    font-size: 14px;
+  }
+  .step-body .tags {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: var(--ice);
+    color: var(--navy);
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .tag.coral  { background: rgba(255,107,91,0.12); color: var(--coral); }
+  .tag.gold   { background: rgba(244,185,66,0.18); color: #B8860B; }
+  .tag.green  { background: rgba(46,182,125,0.14); color: var(--green); }
+
+  .step-output {
+    background: var(--cloud);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid var(--coral);
+  }
+  .step-output .label {
+    font-size: 11px;
+    color: var(--coral);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .step-output .content {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--navy);
+    font-weight: 500;
+  }
+
+  /* 流程連接線 */
+  .arrow {
+    text-align: center;
+    color: var(--coral);
+    font-size: 18px;
+    margin: 0 auto;
+    line-height: 0;
+    padding: 4px 0;
+  }
+
+  /* ===== 階段分組 ===== */
+  .phase-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .phase-tag.input    { background: var(--navy); color: var(--gold); }
+  .phase-tag.generate { background: var(--coral); color: var(--white); }
+  .phase-tag.publish  { background: var(--gold); color: var(--navy); }
+
+  /* ===== 頁面區塊（Wireframe-style 卡片）===== */
+  .blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .block-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .block-card .head {
+    background: var(--navy);
+    color: var(--white);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .block-card .head .num {
+    background: var(--coral);
+    color: var(--white);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .block-card .head .title {
+    flex: 1;
+    margin-left: 12px;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .block-card .head .badge {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+  .block-card .body {
+    padding: 18px 20px;
+  }
+  .block-card .ui-elements {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ui {
+    padding: 10px 14px;
+    background: var(--cloud);
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--body);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ui::before {
+    content: attr(data-icon);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--coral);
+    background: rgba(255,107,91,0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* ===== 資料流圖 ===== */
+  .data-flow {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 40px;
+    color: var(--white);
+  }
+  .data-flow h3 {
+    color: var(--gold);
+    font-size: 14px;
+    letter-spacing: 4px;
+    font-weight: 700;
+    margin-bottom: 24px;
+  }
+  .layers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .layer {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .layer .l-name {
+    font-size: 11px;
+    color: var(--coral);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .layer .l-items {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ice);
+    line-height: 1.7;
+  }
+  .layer .l-items .item {
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
+  }
+  .layer .l-items .item:last-child { border-bottom: none; }
+
+  /* ===== Tech Stack 表 ===== */
+  .tech-table {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tech-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr 120px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tech-row:last-child { border-bottom: none; }
+  .tech-row.head {
+    background: var(--navy);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+  .tech-row > div {
+    padding: 14px 18px;
+    font-size: 13px;
+  }
+  .tech-row .tech-name { font-weight: 600; color: var(--navy); }
+  .tech-row .tech-tool { color: var(--coral); font-weight: 600; }
+  .tech-row .stage-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    background: rgba(244,185,66,0.18);
+    color: #8B6914;
+  }
+  .tech-row .stage-badge.poc { background: rgba(46,182,125,0.18); color: var(--green); }
+
+  /* ===== 開發階段時間表 ===== */
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .milestone {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--coral);
+    border-radius: 10px;
+    padding: 22px;
+  }
+  .milestone .week {
+    font-size: 11px;
+    color: var(--coral);
+    font-weight: 700;
+    letter-spacing: 3px;
+  }
+  .milestone h4 {
+    font-size: 16px;
+    color: var(--navy);
+    margin-top: 6px;
+    margin-bottom: 10px;
+  }
+  .milestone ul {
+    list-style: none;
+    padding: 0;
+  }
+  .milestone ul li {
+    font-size: 12px;
+    color: var(--body);
+    padding: 4px 0;
+    padding-left: 14px;
+    position: relative;
+  }
+  .milestone ul li::before {
+    content: "■";
+    position: absolute;
+    left: 0;
+    color: var(--coral);
+    font-size: 8px;
+    top: 8px;
+  }
+  .milestone:nth-child(2) { border-top-color: var(--gold); }
+  .milestone:nth-child(2) .week { color: var(--gold); }
+  .milestone:nth-child(2) ul li::before { color: var(--gold); }
+  .milestone:nth-child(3) { border-top-color: var(--graphite); }
+  .milestone:nth-child(3) .week { color: var(--graphite); }
+  .milestone:nth-child(3) ul li::before { color: var(--graphite); }
+  .milestone:nth-child(4) { border-top-color: var(--green); }
+  .milestone:nth-child(4) .week { color: var(--green); }
+  .milestone:nth-child(4) ul li::before { color: var(--green); }
+
+  /* ===== 結尾 ===== */
+  .footer {
+    background: var(--navy);
+    color: var(--white);
+    padding: 60px 48px;
+    margin-top: 80px;
+    text-align: center;
+  }
+  .footer .gold-line {
+    display: inline-block;
+    width: 60px; height: 2px;
+    background: var(--gold);
+    margin-bottom: 16px;
+  }
+  .footer h3 {
+    font-size: 26px;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .footer p {
+    color: var(--ice);
+    font-size: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .step { grid-template-columns: 1fr; gap: 16px; }
+    .blocks-grid { grid-template-columns: 1fr; }
+    .layers { grid-template-columns: 1fr 1fr; }
+    .tech-row { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr 1fr; }
+    .hero h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Hero ===== -->
+<header class="hero">
+  <div style="max-width: 1280px; margin: 0 auto;">
+    <div class="eyebrow">HALIN  ·  AI AGENT  ·  ARCHITECTURE</div>
+    <h1>網頁架構設計圖<br><span class="accent">Phase 1 + Phase 2 整合工作流</span></h1>
+    <p class="subtitle">
+      使用者從上而下走完整流程：輸入 → 文案 → 圖片 → 視頻 → 預覽 → 跨平台改寫 → 選帳號 → 排程。
+      每個區塊產出後可獨立檢視、修改、重新生成，最後組合成可發佈內容。
+    </p>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="k">VERSION</div>
+        <div class="v">v0.1（架構草案）</div>
+      </div>
+      <div class="meta-item">
+        <div class="k">STAGE</div>
+        <div class="v">POC（不真發佈）</div>
+      </div>
+      <div class="meta-item">
+        <div class="k">SCOPE</div>
+        <div class="v">10 個區塊・3 階段</div>
+      </div>
+      <div class="meta-item">
+        <div class="k">DATE</div>
+        <div class="v">2026 / 05 / 04</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== 一、主流程 ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">SECTION 1  ·  USER FLOW</span>
+      <h2>主流程：使用者從上到下走 9 個區塊</h2>
+      <p>每一個區塊跑完才進下一個，使用者保有「重新生成」與「修改」的決策權。文案／圖／影各自先做主版，發佈時再自動改寫到三平台。</p>
+    </div>
+
+    <div style="margin-bottom: 16px;">
+      <span class="phase-tag input">階段 A  ·  輸入</span>
+    </div>
+    <div class="flow">
+      <div class="step locked">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>輸入主題與素材</h3>
+          <div class="desc">使用者輸入這次要做的內容主題（例：父親節）、主推商品、檔期、活動類型。可上傳參考圖、商品照、品牌素材。</div>
+          <div class="tags">
+            <span class="tag">表單輸入</span>
+            <span class="tag">檔案上傳</span>
+            <span class="tag coral">必填欄位</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">結構化輸入資料（JSON）</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div style="margin-bottom: 16px;">
+      <span class="phase-tag generate">階段 B  ·  AI 生成（主版）</span>
+    </div>
+    <div class="flow">
+      <div class="step gen">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>文案生成（主版）</h3>
+          <div class="desc">Claude API 依輸入產出多版主版文案候選。使用者選一版，可手動編修或重新生成。確認後鎖定主版。</div>
+          <div class="tags">
+            <span class="tag coral">Claude API</span>
+            <span class="tag">多版候選</span>
+            <span class="tag">手動編修</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">主版文案 1 則</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step gen">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>圖片生成（主版）</h3>
+          <div class="desc">依文案主題與品牌素材，呼叫 Midjourney（海報風）或 FLUX（商品圖）產出多張候選。使用者選 1 張或多張。</div>
+          <div class="tags">
+            <span class="tag coral">Midjourney</span>
+            <span class="tag coral">FLUX.1</span>
+            <span class="tag">多張候選</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">主版圖 1–N 張</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step gen">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>視頻生成（主版）</h3>
+          <div class="desc">用主版圖作為 reference，呼叫 Runway 產出 15 秒短片。或選擇「靜圖動態化」備案路徑（CapCut／AE）。</div>
+          <div class="tags">
+            <span class="tag coral">Runway Gen-3</span>
+            <span class="tag">15 秒</span>
+            <span class="tag gold">備案：靜圖動態化</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">主版視頻 1 段</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step gen">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>主版預覽 + 確認</h3>
+          <div class="desc">把文案、圖、影合併呈現，使用者檢視整體效果。可回到任一步驟重新生成；確認後進入跨平台改寫。</div>
+          <div class="tags">
+            <span class="tag">合併預覽</span>
+            <span class="tag">回退</span>
+            <span class="tag green">主版鎖定</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">已確認主版包</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">▼</div>
+
+    <div style="margin-bottom: 16px;">
+      <span class="phase-tag publish">階段 C  ·  發佈準備</span>
+    </div>
+    <div class="flow">
+      <div class="step publish">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>跨平台自動改寫</h3>
+          <div class="desc">主版確認後，系統自動產出 FB／IG／Threads 三平台版本：文案語氣調整、圖片裁切（1:1／4:5／9:16）、視頻規格適配。</div>
+          <div class="tags">
+            <span class="tag coral">自動改寫</span>
+            <span class="tag">FB 長文</span>
+            <span class="tag">IG 視覺</span>
+            <span class="tag">Threads 短句</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">三平台版本各 1 套</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step publish">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>三平台預覽 + 確認</h3>
+          <div class="desc">並排呈現 FB／IG／Threads 三版本，使用者逐一檢視。可微調文案、換圖、單獨重做某一平台、回退至第 6 區重新改寫。確認後鎖定，不可再改。</div>
+          <div class="tags">
+            <span class="tag">三欄並排</span>
+            <span class="tag">逐一微調</span>
+            <span class="tag coral">單平台重做</span>
+            <span class="tag green">三版鎖定</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">三平台已確認版本</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step publish">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h3>選擇發佈帳號</h3>
+          <div class="desc">勾選要發到哪些帳號：總公司 FB／IG／Threads，或 47 家分店任意組合。可儲存常用組合（例：全分店 FB＋IG）。</div>
+          <div class="tags">
+            <span class="tag">總公司 3 個</span>
+            <span class="tag">分店 141 個</span>
+            <span class="tag gold">常用組合</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">發佈帳號清單</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step publish">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h3>排程設定</h3>
+          <div class="desc">選擇發佈時機：即時發佈，或指定日期時間定時發佈。可針對不同平台設定不同發佈時間（FB 早、IG 晚）。</div>
+          <div class="tags">
+            <span class="tag">即時</span>
+            <span class="tag">定時</span>
+            <span class="tag">分平台時段</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">排程設定</div>
+        </div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step publish">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <h3>送出（POC：只記錄不真發）</h3>
+          <div class="desc">POC 階段：僅記錄發佈意圖至資料庫，產生「模擬發佈報表」。正式版：呼叫 Meta Graph API / Threads API 實際發佈，含失敗重試與告警。</div>
+          <div class="tags">
+            <span class="tag green">POC：模擬</span>
+            <span class="tag gold">正式版：真發佈</span>
+            <span class="tag">發佈紀錄</span>
+          </div>
+        </div>
+        <div class="step-output">
+          <div class="label">→ 產出</div>
+          <div class="content">發佈紀錄 + 報表</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 二、頁面區塊組成 ===== -->
+<section class="section" style="background: var(--white);">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">SECTION 2  ·  PAGE BLOCKS</span>
+      <h2>網頁區塊組成（線框示意）</h2>
+      <p>每個流程步驟對應頁面上的一個區塊，從上往下排列。下面是各區塊內的 UI 元件示意。</p>
+    </div>
+
+    <div class="blocks-grid">
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">1</span>
+          <span class="title">輸入主題與素材</span>
+          <span class="badge">INPUT</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="輸入">主題（例：父親節）</div>
+            <div class="ui" data-icon="下拉">內容類型（商品／抽獎／節慶／開幕）</div>
+            <div class="ui" data-icon="輸入">主推商品（型號・價格）</div>
+            <div class="ui" data-icon="日期">檔期起訖日</div>
+            <div class="ui" data-icon="上傳">參考圖／商品照／Logo</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">2</span>
+          <span class="title">文案生成（主版）</span>
+          <span class="badge">AI</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="按鈕">生成多版候選（3 版）</div>
+            <div class="ui" data-icon="卡片">候選 A：完整版文案</div>
+            <div class="ui" data-icon="卡片">候選 B：簡潔版文案</div>
+            <div class="ui" data-icon="卡片">候選 C：故事版文案</div>
+            <div class="ui" data-icon="操作">選一版 ⋅ 編修 ⋅ 重新生成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">3</span>
+          <span class="title">圖片生成（主版）</span>
+          <span class="badge">AI</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="切換">風格：手繪海報 / 商品九宮格 / 情境照</div>
+            <div class="ui" data-icon="按鈕">生成多張候選（4 張）</div>
+            <div class="ui" data-icon="預覽">候選圖網格（4 格）</div>
+            <div class="ui" data-icon="操作">選 1 或多張 ⋅ 局部重繪 ⋅ 換風格</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">4</span>
+          <span class="title">視頻生成（主版）</span>
+          <span class="badge">AI</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="切換">模式：AI 生成 / 靜圖動態化</div>
+            <div class="ui" data-icon="輸入">15 秒分鏡描述</div>
+            <div class="ui" data-icon="按鈕">生成（Runway）</div>
+            <div class="ui" data-icon="預覽">視頻播放器</div>
+            <div class="ui" data-icon="操作">通過 ⋅ 重新生成 ⋅ 微調</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">5</span>
+          <span class="title">主版預覽</span>
+          <span class="badge">REVIEW</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="預覽">合併預覽：文案 + 圖 + 影</div>
+            <div class="ui" data-icon="按鈕">回退至步驟 2 / 3 / 4</div>
+            <div class="ui" data-icon="按鈕">確認主版 → 進入跨平台改寫</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">6</span>
+          <span class="title">跨平台改寫</span>
+          <span class="badge">AUTO</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="自動">FB 版（長文 + 圖 1080×1080 + 影 9:16）</div>
+            <div class="ui" data-icon="自動">IG 版（精簡 + 圖 1080×1350 + Reel）</div>
+            <div class="ui" data-icon="自動">Threads 版（短句 + 圖 + 短影）</div>
+            <div class="ui" data-icon="操作">微調文案 ⋅ 微調 Hashtag</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">7</span>
+          <span class="title">三平台預覽 + 確認</span>
+          <span class="badge">REVIEW</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="預覽">三欄並排：FB ⋅ IG ⋅ Threads 模擬畫面</div>
+            <div class="ui" data-icon="操作">逐平台微調文案／換圖</div>
+            <div class="ui" data-icon="操作">單獨重做某一平台版本</div>
+            <div class="ui" data-icon="按鈕">回退至步驟 6 重新改寫</div>
+            <div class="ui" data-icon="按鈕">確認三版 → 進入帳號選擇</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">8</span>
+          <span class="title">選擇發佈帳號</span>
+          <span class="badge">PUBLISH</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="勾選">總公司：FB ⋅ IG ⋅ Threads</div>
+            <div class="ui" data-icon="勾選">47 家分店（可全選／群組／個別）</div>
+            <div class="ui" data-icon="模板">儲存組合（全店 FB+IG ⋅ 雙北 IG ⋅ ...）</div>
+            <div class="ui" data-icon="即時">已選 X 個頁面</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card">
+        <div class="head">
+          <span class="num">9</span>
+          <span class="title">排程設定</span>
+          <span class="badge">PUBLISH</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="切換">即時 / 定時</div>
+            <div class="ui" data-icon="日期">指定發佈日期時間</div>
+            <div class="ui" data-icon="進階">分平台時段：FB 早 / IG 晚</div>
+            <div class="ui" data-icon="預覽">排程摘要</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="block-card" style="grid-column: span 2;">
+        <div class="head">
+          <span class="num">10</span>
+          <span class="title">送出（POC 階段：模擬發佈）</span>
+          <span class="badge">SUBMIT</span>
+        </div>
+        <div class="body">
+          <div class="ui-elements">
+            <div class="ui" data-icon="按鈕">送出 → 寫入發佈紀錄資料庫</div>
+            <div class="ui" data-icon="報表">發佈摘要：X 個頁面 ⋅ Y 個平台 ⋅ 排程時間</div>
+            <div class="ui" data-icon="後續">查看歷史紀錄 / 重新編輯</div>
+            <div class="ui" data-icon="正式">正式版：呼叫 Meta API 真發佈 + 失敗重試</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 三、技術分層 ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">SECTION 3  ·  ARCHITECTURE LAYERS</span>
+      <h2>四層技術架構</h2>
+      <p>網頁背後的資料流：從前端到資料庫，到 AI 服務，到外部社群 API。</p>
+    </div>
+
+    <div class="data-flow">
+      <h3>DATA FLOW  ·  從上到下</h3>
+      <div class="layers">
+        <div class="layer">
+          <div class="l-name">L1 ⋅ 前端</div>
+          <div class="l-items">
+            <div class="item">React 單頁網頁</div>
+            <div class="item">9 區塊 wizard</div>
+            <div class="item">即時預覽</div>
+            <div class="item">表單驗證</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="l-name">L2 ⋅ 後端 API</div>
+          <div class="l-items">
+            <div class="item">FastAPI（Python）</div>
+            <div class="item">REST endpoints</div>
+            <div class="item">使用者狀態</div>
+            <div class="item">任務佇列</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="l-name">L3 ⋅ AI 服務</div>
+          <div class="l-items">
+            <div class="item">Claude API（文案）</div>
+            <div class="item">Midjourney（圖）</div>
+            <div class="item">FLUX（圖）</div>
+            <div class="item">Runway（影）</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="l-name">L4 ⋅ 資料 + 外部</div>
+          <div class="l-items">
+            <div class="item">PostgreSQL（紀錄）</div>
+            <div class="item">物件儲存（圖／影）</div>
+            <div class="item">Meta Graph API</div>
+            <div class="item">Threads API</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 四、POC vs 正式版 ===== -->
+<section class="section" style="background: var(--white);">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">SECTION 4  ·  STAGES</span>
+      <h2>POC 階段做什麼，正式版再做什麼</h2>
+      <p>POC 先驗證網頁流程與內容生成，發佈動作只記錄不真送；正式版再串 Meta API 與排程引擎。</p>
+    </div>
+
+    <div class="tech-table">
+      <div class="tech-row head">
+        <div>區塊</div>
+        <div>POC 階段</div>
+        <div>正式版</div>
+        <div style="text-align: center;">階段</div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">1. 輸入素材</div>
+        <div>表單 + 上傳，存本地</div>
+        <div>素材庫 DB + 商品 API 介接</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">2. 文案生成</div>
+        <div class="tech-tool">Claude API ⋅ 直接調用</div>
+        <div>多模型支援 ⋅ 提示詞庫</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">3. 圖片生成</div>
+        <div class="tech-tool">Midjourney + FLUX</div>
+        <div>多模型路由 ⋅ 風格庫</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">4. 視頻生成</div>
+        <div class="tech-tool">Runway Gen-3</div>
+        <div>Runway + Pika + 自架</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">5. 主版預覽</div>
+        <div>合併呈現 ⋅ 可回退</div>
+        <div>版本歷史 ⋅ 比對</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">6. 跨平台改寫</div>
+        <div>Claude API（文案）+ 簡單裁切（圖）</div>
+        <div>細部規則化 ⋅ 平台特化</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">7. 三平台預覽 + 確認</div>
+        <div>三欄並排 ⋅ 可逐平台微調與重做</div>
+        <div>新增比對檢視 ⋅ 版本歷史</div>
+        <div><span class="stage-badge poc">POC 已含</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">8. 選擇帳號</div>
+        <div>UI 完成 ⋅ 帳號為靜態清單</div>
+        <div>串 Meta Business 真實帳號</div>
+        <div><span class="stage-badge">UI POC ⋅ API 正式</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">9. 排程設定</div>
+        <div>UI 完成 ⋅ 寫入 DB 不執行</div>
+        <div>APScheduler 實際觸發</div>
+        <div><span class="stage-badge">UI POC ⋅ 引擎正式</span></div>
+      </div>
+      <div class="tech-row">
+        <div class="tech-name">10. 送出發佈</div>
+        <div>模擬發佈 ⋅ 寫紀錄</div>
+        <div>Meta Graph + Threads API ⋅ 失敗重試</div>
+        <div><span class="stage-badge">正式版</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 五、開發里程碑 ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="eyebrow">SECTION 5  ·  ROADMAP</span>
+      <h2>POC 開發節奏（4 階段）</h2>
+      <p>採抽時間推進，不綁定固定週數。每階段完成後再進下一階段。</p>
+    </div>
+
+    <div class="timeline">
+      <div class="milestone">
+        <div class="week">STAGE 1</div>
+        <h4>骨架搭建</h4>
+        <ul>
+          <li>建 React 10 區塊骨架</li>
+          <li>建 FastAPI 路由</li>
+          <li>建 PostgreSQL 結構</li>
+          <li>UI 線框可走完流程</li>
+        </ul>
+      </div>
+      <div class="milestone">
+        <div class="week">STAGE 2</div>
+        <h4>AI 服務串接</h4>
+        <ul>
+          <li>串 Claude API 文案</li>
+          <li>串 Midjourney／FLUX 圖</li>
+          <li>串 Runway 視頻</li>
+          <li>串通主版生成</li>
+        </ul>
+      </div>
+      <div class="milestone">
+        <div class="week">STAGE 3</div>
+        <h4>跨平台 + 帳號</h4>
+        <ul>
+          <li>跨平台改寫邏輯</li>
+          <li>三平台預覽 UI</li>
+          <li>帳號選擇 UI</li>
+          <li>排程設定 UI</li>
+          <li>模擬發佈紀錄</li>
+        </ul>
+      </div>
+      <div class="milestone">
+        <div class="week">STAGE 4</div>
+        <h4>整合 + 父親節 demo</h4>
+        <ul>
+          <li>整合測試</li>
+          <li>跑父親節 POC</li>
+          <li>產出 demo 包</li>
+          <li>給總經理檢視</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="gold-line"></div>
+  <h3>下一步：互動式 HTML demo</h3>
+  <p>架構圖確認後，下一份產出將是可點擊的 HTML demo（未串 API），讓哥哥與總經理直接「按到」每個區塊。</p>
+</footer>
+
+</body>
+</html>
